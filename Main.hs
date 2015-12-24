@@ -16,8 +16,8 @@ chunks :: Text -> [Chunk]
 chunks = splitEvery 4 . lines
 
 parseDigits :: Chunk -> [Maybe Digit]
-parseDigits ls@(_:_:_:"":_) = map fromOCR $ zip3 x y z
-  where (x:y:z:_) = map (splitEvery 3) . take 3 $ ls
+parseDigits ls@(_:_:_:_:_) = map fromOCR $ zip3 x y z
+  where [x, y, z] = map (splitEvery 3) . take 3 $ ls
 parseDigits _ = []
 
 fromOCR :: OCR -> Maybe Digit
