@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -Wall #-}
 module Main where
 
+import Data.Maybe (fromMaybe)
+
 type Text = String
 type Chunk = [Text]
 type OCR = (Text, Text, Text)
@@ -16,8 +18,8 @@ chunks :: Text -> [Chunk]
 chunks = splitEvery 4 . lines
 
 parseDigits :: Chunk -> [Maybe Digit]
-parseDigits ls@(_:_:_:_:_) = map fromOCR $ zip3 x y z
-  where [x, y, z] = map (splitEvery 3) . take 3 $ ls
+parseDigits c@(_:_:_:_:_) = map fromOCR $ zip3 x y z
+  where [x, y, z] = map (splitEvery 3) . take 3 $ c
 parseDigits _ = []
 
 fromOCR :: OCR -> Maybe Digit
@@ -42,9 +44,7 @@ parseAll :: Text -> [Maybe Number]
 parseAll = map parseNumber . chunks
 
 pack :: [Maybe Number] -> String
-pack = unlines . map toString
-  where toString Nothing  = ""
-        toString (Just n) = n
+pack = unlines . map (fromMaybe "")
 
 main :: IO ()
 main =
