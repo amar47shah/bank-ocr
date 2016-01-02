@@ -3,34 +3,40 @@ module Parser (assemble, parse) where
 
 type Chunk = [String]
 type OCR = (String, String, String)
-type Digit = Char
-type Number = [Digit]
+
+data Digit = Legible Char | Illegible OCR deriving Show
+data Number = Number { digits :: [Digit] }
 
 assemble :: [Number] -> String
-assemble = unlines
+assemble = unlines . map show
 
 parse :: String -> [Number]
-parse = map parseDigits . chunks
+parse = map parseNumber . chunks
 
-parseDigits :: Chunk -> Number
-parseDigits c@(_:_:_:_:_) = map fromOCR $ zip3 x y z
+instance Show Number where
+  show = map toChar . digits
+
+toChar :: Digit -> Char
+toChar (Legible d) = d
+toChar _           = '?'
+
+parseNumber :: Chunk -> Number
+parseNumber c@(_:_:_:_:_) = Number . map fromOCR $ zip3 x y z
   where [x, y, z] = map (splitEvery 3) . take 3 $ c
-parseDigits _ = []
+parseNumber _ = Number []
 
 fromOCR :: OCR -> Digit
-fromOCR o =
-  case o of
-    (" _ ","| |","|_|") -> '0'
-    ("   ","  |","  |") -> '1'
-    (" _ "," _|","|_ ") -> '2'
-    (" _ "," _|"," _|") -> '3'
-    ("   ","|_|","  |") -> '4'
-    (" _ ","|_ "," _|") -> '5'
-    (" _ ","|_ ","|_|") -> '6'
-    (" _ ","  |","  |") -> '7'
-    (" _ ","|_|","|_|") -> '8'
-    (" _ ","|_|"," _|") -> '9'
-    _                   -> '?'
+fromOCR (" _ ","| |","|_|") = Legible '0'
+fromOCR ("   ","  |","  |") = Legible '1'
+fromOCR (" _ "," _|","|_ ") = Legible '2'
+fromOCR (" _ "," _|"," _|") = Legible '3'
+fromOCR ("   ","|_|","  |") = Legible '4'
+fromOCR (" _ ","|_ "," _|") = Legible '5'
+fromOCR (" _ ","|_ ","|_|") = Legible '6'
+fromOCR (" _ ","  |","  |") = Legible '7'
+fromOCR (" _ ","|_|","|_|") = Legible '8'
+fromOCR (" _ ","|_|"," _|") = Legible '9'
+fromOCR ocr                 = Illegible ocr
 
 chunks :: String -> [Chunk]
 chunks = splitEvery 4 . lines
