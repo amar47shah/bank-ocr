@@ -3,8 +3,8 @@ module Parser (assemble, parse) where
 
 type Chunk = [String]
 type OCR = (String, String, String)
+type Digit = Either OCR Char
 
-data Digit = Legible Char | Illegible OCR deriving Show
 data Number = Number Bool [Digit]
 
 assemble :: [Number] -> String
@@ -19,8 +19,7 @@ instance Show Number where
           tag False = (++ " ILL")
 
 toChar :: Digit -> Char
-toChar (Legible d) = d
-toChar _           = '?'
+toChar = either (const '?') id
 
 parseNumber :: Chunk -> Number
 parseNumber (t:m:b:_:[]) = let [x, y, z] = splitEvery 3 <$> [t, m, b]
@@ -31,21 +30,21 @@ empty :: Number
 empty = Number True []
 
 (|-) :: Digit -> Number -> Number
-d@(Illegible _) |- Number _ ds = Number False       $ d:ds
-d               |- Number l ds = Number (True && l) $ d:ds
+d@(Left _) |- Number _ ds = Number False       $ d:ds
+d          |- Number l ds = Number (True && l) $ d:ds
 
 fromOCR :: OCR -> Digit
-fromOCR (" _ ","| |","|_|") = Legible '0'
-fromOCR ("   ","  |","  |") = Legible '1'
-fromOCR (" _ "," _|","|_ ") = Legible '2'
-fromOCR (" _ "," _|"," _|") = Legible '3'
-fromOCR ("   ","|_|","  |") = Legible '4'
-fromOCR (" _ ","|_ "," _|") = Legible '5'
-fromOCR (" _ ","|_ ","|_|") = Legible '6'
-fromOCR (" _ ","  |","  |") = Legible '7'
-fromOCR (" _ ","|_|","|_|") = Legible '8'
-fromOCR (" _ ","|_|"," _|") = Legible '9'
-fromOCR ocr                 = Illegible ocr
+fromOCR (" _ ","| |","|_|") = Right '0'
+fromOCR ("   ","  |","  |") = Right '1'
+fromOCR (" _ "," _|","|_ ") = Right '2'
+fromOCR (" _ "," _|"," _|") = Right '3'
+fromOCR ("   ","|_|","  |") = Right '4'
+fromOCR (" _ ","|_ "," _|") = Right '5'
+fromOCR (" _ ","|_ ","|_|") = Right '6'
+fromOCR (" _ ","  |","  |") = Right '7'
+fromOCR (" _ ","|_|","|_|") = Right '8'
+fromOCR (" _ ","|_|"," _|") = Right '9'
+fromOCR ocr                 = Left ocr
 
 chunks :: String -> [Chunk]
 chunks = splitEvery 4 . lines
