@@ -21,9 +21,9 @@ toChar (Legible d) = d
 toChar _           = '?'
 
 parseNumber :: Chunk -> Number
-parseNumber c@(_:_:_:_:_) = Number . map fromOCR $ zip3 x y z
-  where [x, y, z] = map (splitEvery 3) . take 3 $ c
-parseNumber _ = Number []
+parseNumber (t:m:b:_:[]) = let [x, y, z] = splitEvery 3 <$> [t, m, b]
+                            in Number $ fromOCR <$> zip3 x y z
+parseNumber _            = Number []
 
 fromOCR :: OCR -> Digit
 fromOCR (" _ ","| |","|_|") = Legible '0'
