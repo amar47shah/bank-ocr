@@ -5,7 +5,7 @@ import OCR (Digit, toChar, fromOCR)
 import Split (splitEvery)
 
 import Data.Char (digitToInt)
-import Data.Either (rights)
+import Data.Either (lefts, rights)
 
 assemble :: [Number] -> String
 assemble = unlines . map show
@@ -14,16 +14,19 @@ parse :: String -> [Number]
 parse = map parseNumber . chunks
 
 type Chunk = [String]
-data Number = Number Bool [Digit]
+data Number = Number { digits :: [Digit] }
 
 instance Show Number where
-  show (Number l ds) = tag l ds $ map toChar ds
-    where tag True ds'
-           | check ds' = id
-           | otherwise = (++ " ERR")
-          tag False _  = (++ " ILL")
+  show n = (toChar <$> digits n) ++ tag n
+    where tag n'
+           | not $ legible n' = " ILL"
+           | not $ check n'   = " ERR"
+           | otherwise        = ""
 
-check :: [Digit] -> Bool
+legible :: Number -> Bool
+legible = null . lefts . digits
+
+check :: Number -> Bool
 check = (== 0)
       . (`mod` 11)
       . toInteger
@@ -32,18 +35,12 @@ check = (== 0)
       . take 9
       . (digitToInt <$>)
       . rights
+      . digits
 
 parseNumber :: Chunk -> Number
 parseNumber (t:m:b:_:[]) = let [x, y, z] = splitEvery 3 <$> [t, m, b]
-                            in foldr (|-) empty $ fromOCR <$> zip3 x y z
-parseNumber _            = empty
-
-empty :: Number
-empty = Number True []
-
-(|-) :: Digit -> Number -> Number
-d@(Left _) |- Number _ ds = Number False       $ d:ds
-d          |- Number l ds = Number (True && l) $ d:ds
+                            in Number $ fromOCR <$> zip3 x y z
+parseNumber _            = Number []
 
 chunks :: String -> [Chunk]
 chunks = splitEvery 4 . lines
