@@ -37,7 +37,7 @@ check = (== 0)
       . digits
 
 parseNumber :: Chunk -> Number
-parseNumber (t:m:b:_:[]) = let [x, y, z] = splitEvery 3 <$> [t, m, b]
+parseNumber (a:b:c:_:[]) = let [x, y, z] = splitEvery 3 <$> [a, b, c]
                             in Number $ fromOCR <$> zip3 x y z
 parseNumber _            = Number []
 
