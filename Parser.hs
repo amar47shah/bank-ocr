@@ -4,6 +4,9 @@ module Parser (assemble, parse) where
 import OCR (Digit, toChar, fromOCR)
 import Split (splitEvery)
 
+import Data.Char (digitToInt)
+import Data.Either (rights)
+
 assemble :: [Number] -> String
 assemble = unlines . map show
 
@@ -14,9 +17,21 @@ type Chunk = [String]
 data Number = Number Bool [Digit]
 
 instance Show Number where
-  show (Number l ds) = tag l $ map toChar ds
-    where tag True  = id
-          tag False = (++ " ILL")
+  show (Number l ds) = tag l ds $ map toChar ds
+    where tag True ds'
+           | check ds' = id
+           | otherwise = (++ " ERR")
+          tag False _  = (++ " ILL")
+
+check :: [Digit] -> Bool
+check = (== 0)
+      . (`mod` 11)
+      . toInteger
+      . sum
+      . zipWith (*) [9,8..1]
+      . take 9
+      . (digitToInt <$>)
+      . rights
 
 parseNumber :: Chunk -> Number
 parseNumber (t:m:b:_:[]) = let [x, y, z] = splitEvery 3 <$> [t, m, b]
