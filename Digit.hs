@@ -51,3 +51,8 @@ tryOCR ([_ , t, _ ]
        ,[tl, m, tr]
        ,[bl, b, br]) = Just . OCR $ (/= ' ') <$> [t, tl, m, tr, bl, b, br]
 tryOCR _             = Nothing
+
+variants :: OCR -> [OCR]
+variants (OCR bits) = let vary (a, b:c) = OCR $ a ++ (not b) : c
+                          vary (a, _)   = OCR a
+                       in vary <$> zipWith splitAt [0..6] (replicate 7 bits)
