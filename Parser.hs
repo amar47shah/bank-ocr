@@ -32,7 +32,6 @@ check = (== 0)
       . toInteger
       . sum
       . zipWith (*) [9,8..1]
-      . take 9
       . (digitToInt <$>)
       . rights
       . digits
