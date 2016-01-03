@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 module Parser (assemble, parse) where
 
-import OCR (Digit, toChar, fromOCR)
+import Digit (Digit, toChar, fromTuple)
 import Split (splitEvery)
 
 import Data.Char (digitToInt)
@@ -38,7 +38,7 @@ check = (== 0)
 
 parseNumber :: Chunk -> Number
 parseNumber (a:b:c:_:[]) = let [x, y, z] = splitEvery 3 <$> [a, b, c]
-                            in Number $ fromOCR <$> zip3 x y z
+                            in Number $ fromTuple <$> zip3 x y z
 parseNumber _            = Number []
 
 chunks :: String -> [Chunk]
