@@ -1,8 +1,10 @@
 {-# OPTIONS_GHC -Wall #-}
 module Digit (Digit, fromTuple, toChar) where
 
+import Data.List (find)
+
 type Digit = Either (Maybe OCR) Char
-data OCR = OCR [Bool]
+data OCR = OCR [Bool] deriving Eq
 
 instance Show OCR where
   show (OCR bits) = '\n' : unlines [[' ', t, ' '], [tl, m, tr], [bl, b, br]]
@@ -14,37 +16,30 @@ toChar :: Digit -> Char
 toChar = either (const '?') id
 
 fromTuple :: (String, String, String) -> Digit
-fromTuple (" _ "
-          ,"| |"
-          ,"|_|") = Right '0'
-fromTuple ("   "
-          ,"  |"
-          ,"  |") = Right '1'
-fromTuple (" _ "
-          ," _|"
-          ,"|_ ") = Right '2'
-fromTuple (" _ "
-          ," _|"
-          ," _|") = Right '3'
-fromTuple ("   "
-          ,"|_|"
-          ,"  |") = Right '4'
-fromTuple (" _ "
-          ,"|_ "
-          ," _|") = Right '5'
-fromTuple (" _ "
-          ,"|_ "
-          ,"|_|") = Right '6'
-fromTuple (" _ "
-          ,"  |"
-          ,"  |") = Right '7'
-fromTuple (" _ "
-          ,"|_|"
-          ,"|_|") = Right '8'
-fromTuple (" _ "
-          ,"|_|"
-          ," _|") = Right '9'
-fromTuple t       = Left $ tryOCR t
+fromTuple = zipZap tryOCR lookupOCR
+
+lookupOCR :: OCR -> Maybe Char
+lookupOCR o = snd <$> find ((== o) . fst) table
+
+zipZap :: (a -> Maybe b) -> (b -> Maybe c) -> a -> Either (Maybe b) c
+zipZap f g x = case f x of
+                 Nothing -> Left Nothing
+                 Just y  -> case g y of
+                              Nothing -> Left $ Just y
+                              Just z  -> Right z
+
+table :: [(OCR, Char)]
+table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
+        ,(OCR [False, False, False,  True, False, False,  True], '1')
+        ,(OCR [ True, False,  True,  True,  True,  True, False], '2')
+        ,(OCR [ True, False,  True,  True, False,  True,  True], '3')
+        ,(OCR [False,  True,  True,  True, False, False,  True], '4')
+        ,(OCR [ True,  True,  True, False, False,  True,  True], '5')
+        ,(OCR [ True,  True,  True, False,  True,  True,  True], '6')
+        ,(OCR [ True, False, False,  True, False, False,  True], '7')
+        ,(OCR [ True,  True,  True,  True,  True,  True,  True], '8')
+        ,(OCR [ True,  True,  True,  True, False,  True,  True], '9')
+        ]
 
 tryOCR :: (String, String, String) -> Maybe OCR
 tryOCR ([_ , t, _ ]
