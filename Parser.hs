@@ -37,8 +37,8 @@ check = (== 0)
       . digits
 
 parseNumber :: Chunk -> Number
-parseNumber (a:b:c:_:[]) = let [x, y, z] = splitEvery 3 <$> [a, b, c]
-                            in Number $ fromTuple <$> zip3 x y z
+parseNumber (a:b:c:_:[]) = let [xs, ys, zs] = splitEvery 3 <$> [a, b, c]
+                            in Number $ fromTuple <$> zip3 xs ys zs
 parseNumber _            = Number []
 
 chunks :: String -> [Chunk]
