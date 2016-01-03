@@ -5,7 +5,7 @@ type Chunk = [String]
 type OCR = (String, String, String)
 
 data Digit = Legible Char | Illegible OCR deriving Show
-data Number = Number { digits :: [Digit] }
+data Number = Number Bool [Digit]
 
 assemble :: [Number] -> String
 assemble = unlines . map show
@@ -14,7 +14,9 @@ parse :: String -> [Number]
 parse = map parseNumber . chunks
 
 instance Show Number where
-  show = map toChar . digits
+  show (Number l ds) = tag l $ map toChar ds
+    where tag True  = id
+          tag False = (++ " ILL")
 
 toChar :: Digit -> Char
 toChar (Legible d) = d
@@ -22,8 +24,15 @@ toChar _           = '?'
 
 parseNumber :: Chunk -> Number
 parseNumber (t:m:b:_:[]) = let [x, y, z] = splitEvery 3 <$> [t, m, b]
-                            in Number $ fromOCR <$> zip3 x y z
-parseNumber _            = Number []
+                            in foldr (|-) empty $ fromOCR <$> zip3 x y z
+parseNumber _            = empty
+
+empty :: Number
+empty = Number True []
+
+(|-) :: Digit -> Number -> Number
+d@(Illegible _) |- Number _ ds = Number False       $ d:ds
+d               |- Number l ds = Number (True && l) $ d:ds
 
 fromOCR :: OCR -> Digit
 fromOCR (" _ ","| |","|_|") = Legible '0'
