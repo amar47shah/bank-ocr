@@ -1,7 +1,8 @@
 {-# OPTIONS_GHC -Wall #-}
-module Digit (Digit, fromTuple, toChar) where
+module Digit (Digit, alternatives, fromTuple, toChar) where
 
-import Data.List (find)
+import Data.Maybe (catMaybes)
+import Data.Tuple (swap)
 
 type Digit = Either (Maybe OCR) Char
 data OCR = OCR [Bool] deriving Eq
@@ -19,7 +20,10 @@ fromTuple :: (String, String, String) -> Digit
 fromTuple = zipZap tryOCR lookupOCR
 
 lookupOCR :: OCR -> Maybe Char
-lookupOCR o = snd <$> find ((== o) . fst) table
+lookupOCR = (`lookup` table)
+
+lookupChar :: Char -> Maybe OCR
+lookupChar = (`lookup` map swap table)
 
 -- No idea what to call this.
 -- There must be a way to simplify it
@@ -51,7 +55,15 @@ tryOCR ([_ , t, _ ]
        ,[bl, b, br]) = Just . OCR $ (/= ' ') <$> [t, tl, m, tr, bl, b, br]
 tryOCR _             = Nothing
 
-variants :: OCR -> [OCR]
-variants (OCR bits) = let vary (a, b:c) = OCR $ a ++ (not b) : c
-                          vary (a, _)   = OCR a
-                       in vary <$> zipWith splitAt [0..6] (replicate 7 bits)
+alternatives :: Digit -> [Digit]
+alternatives (Left mo) = variants mo
+alternatives (Right c) = variants $ lookupChar c
+
+variants :: Maybe OCR -> [Digit]
+variants (Just o) = (Right <$>) . catMaybes . (lookupOCR <$>) . oneAways $ o
+variants _        = []
+
+oneAways :: OCR -> [OCR]
+oneAways (OCR bits) = let oneAway (a, b:c) = OCR $ a ++ (not b) : c
+                          oneAway (a, _)   = OCR a
+                       in oneAway <$> zipWith splitAt [0..6] (replicate 7 bits)
