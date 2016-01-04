@@ -21,6 +21,10 @@ fromTuple = zipZap tryOCR lookupOCR
 lookupOCR :: OCR -> Maybe Char
 lookupOCR o = snd <$> find ((== o) . fst) table
 
+-- No idea what to call this.
+-- There must be a way to simplify it
+-- using Functor-Applicative-Monad
+-- instances for Maybe and Either.
 zipZap :: (a -> Maybe b) -> (b -> Maybe c) -> a -> Either (Maybe b) c
 zipZap f g x = case f x of
                  Nothing -> Left Nothing
