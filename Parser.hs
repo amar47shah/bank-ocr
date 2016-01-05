@@ -11,26 +11,38 @@ assemble :: [Number] -> String
 assemble = unlines . map show
 
 parse :: String -> [Number]
-parse = map parseNumber . chunks
+parse = map process . chunks
 
 type Chunk = [String]
 data Number = Number { status :: Status
                      , digits :: [Digit] }
 
 instance Show Number where
-  show n = (toChar <$> digits n) ++ tag n
-    where tag n'
-           | not $ legible n' = " ILL"
-           | not $ check n'   = " ERR"
-           | otherwise        = ""
+  show n = (toChar <$> digits n) ++ (tag $ status n)
+
+tag :: Status -> String
+tag Illegible = " ILL"
+tag Incorrect = " ERR"
+tag _         = ""
 
 data Status = Empty
             | Unverified
-            | Verified
             | Illegible
+            | Incorrect
+            | Correct
             | Replaced [Digit]
             | Ambiguous [[Digit]]
             deriving Show
+
+process :: Chunk -> Number
+process = verify . parseNumber
+
+verify :: Number -> Number
+verify n@(Number Unverified _)
+ | not $ legible n = n { status = Illegible }
+ | not $ check n   = n { status = Incorrect }
+ | otherwise    = n { status = Correct   }
+verify n = n
 
 legible :: Number -> Bool
 legible = null . lefts . digits
