@@ -14,7 +14,8 @@ parse :: String -> [Number]
 parse = map parseNumber . chunks
 
 type Chunk = [String]
-data Number = Number { digits :: [Digit] }
+data Number = Number { status :: Status
+                     , digits :: [Digit] }
 
 instance Show Number where
   show n = (toChar <$> digits n) ++ tag n
@@ -22,6 +23,14 @@ instance Show Number where
            | not $ legible n' = " ILL"
            | not $ check n'   = " ERR"
            | otherwise        = ""
+
+data Status = Empty
+            | Unverified
+            | Verified
+            | Illegible
+            | Replaced [Digit]
+            | Ambiguous [[Digit]]
+            deriving Show
 
 legible :: Number -> Bool
 legible = null . lefts . digits
@@ -38,8 +47,8 @@ check = (== 0)
 
 parseNumber :: Chunk -> Number
 parseNumber (a:b:c:_:[]) = let [xs, ys, zs] = splitEvery 3 <$> [a, b, c]
-                            in Number $ fromTuple <$> zip3 xs ys zs
-parseNumber _            = Number []
+                            in Number Unverified $ fromTuple <$> zip3 xs ys zs
+parseNumber _            = Number Empty []
 
 chunks :: String -> [Chunk]
 chunks = splitEvery 4 . lines
