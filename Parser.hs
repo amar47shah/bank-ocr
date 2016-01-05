@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 module Parser (assemble, parse) where
 
-import Digit (Digit, toChar, fromTuple)
+import Digit (Digit, alternatives, toChar, fromTuple)
 import Split (splitEvery)
 
 import Data.Char (digitToInt)
@@ -18,31 +18,62 @@ data Number = Number { status :: Status
                      , digits :: [Digit] }
 
 instance Show Number where
-  show n = (toChar <$> digits n) ++ (tag $ status n)
+  show (Number (Replaced n) _) = show n
+  show n                       = (display $ digits n) ++ (tag $ status n)
+
+display :: [Digit] -> String
+display = map toChar
 
 tag :: Status -> String
-tag Illegible = " ILL"
-tag Incorrect = " ERR"
-tag _         = ""
+tag  Illegible     = " ILL"
+tag  Incorrect     = " ERR"
+tag (Ambiguous ns) = " AMB " ++ show ns
+tag _              = ""
 
-data Status = Empty
+data Status = Unparsable
             | Unverified
             | Illegible
             | Incorrect
             | Correct
-            | Replaced [Digit]
-            | Ambiguous [[Digit]]
+            | Replaced Number
+            | Ambiguous [Number]
             deriving Show
 
 process :: Chunk -> Number
-process = verify . parseNumber
+process = repair . verify . parseNumber
+
+repair :: Number -> Number
+repair n@(Number Illegible _) = repair' n
+repair n@(Number Incorrect _) = repair' n
+repair n = n
+
+repair' :: Number -> Number
+repair' n@(Number s ds) = produce s (replacements n) ds
+  where produce s' []  = Number s'
+        produce _  [r] = Number $ Replaced r
+        produce _  rs  = Number $ Ambiguous rs
+
+replacements :: Number -> [Number]
+replacements = filter correct . (verify . new <$>) . alts . digits
+
+alts :: [Digit] -> [[Digit]]
+alts = foldr ((++) . oneAways) [] . zipWith splitAt [0..8] . replicate 9
+  where oneAways (a, b:c) = [a ++ b':c | b' <- alternatives b]
+        oneAways _        = []
+
+new :: [Digit] -> Number
+new = Number Unverified
 
 verify :: Number -> Number
 verify n@(Number Unverified _)
  | not $ legible n = n { status = Illegible }
  | not $ check n   = n { status = Incorrect }
- | otherwise    = n { status = Correct   }
+ | otherwise       = n { status = Correct   }
 verify n = n
+
+correct :: Number -> Bool
+correct (Number Correct _) = True
+correct _                  = False
 
 legible :: Number -> Bool
 legible = null . lefts . digits
@@ -59,8 +90,8 @@ check = (== 0)
 
 parseNumber :: Chunk -> Number
 parseNumber (a:b:c:_:[]) = let [xs, ys, zs] = splitEvery 3 <$> [a, b, c]
-                            in Number Unverified $ fromTuple <$> zip3 xs ys zs
-parseNumber _            = Number Empty []
+                            in new $ fromTuple <$> zip3 xs ys zs
+parseNumber _            = Number Unparsable []
 
 chunks :: String -> [Chunk]
 chunks = splitEvery 4 . lines
