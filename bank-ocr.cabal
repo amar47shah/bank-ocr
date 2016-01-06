@@ -18,7 +18,7 @@ cabal-version:       >=1.10
 
 executable bank-ocr
   main-is:             Main.hs
-  -- other-modules:       
+  other-modules:       Digit, Parser, Split
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9, bytestring >=0.10 && <0.11
   hs-source-dirs:      src
