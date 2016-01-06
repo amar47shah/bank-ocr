@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy.Char8
 
 main :: IO ()
 main =
-  BS.readFile "input.txt" >>=
+  BS.readFile "data/input.txt" >>=
     return . BS.pack . assemble . parse . BS.unpack >>=
-      BS.writeFile "output.txt" >>
+      BS.writeFile "data/output.txt" >>
         putStrLn "Done"
