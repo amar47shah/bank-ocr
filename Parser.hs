@@ -57,7 +57,7 @@ new = Number Unverified
 verify :: Number -> Number
 verify n@(Number Unverified _)
  | not $ legible n = n { status = Illegible }
- | not $ check n   = n { status = Incorrect }
+ | not $   check n = n { status = Incorrect }
  | otherwise       = n { status = Correct   }
 verify n = n
 
@@ -77,7 +77,7 @@ check = (== 0)
 repair :: Number -> Number
 repair n@(Number Illegible _) = repair' n
 repair n@(Number Incorrect _) = repair' n
-repair n = n
+repair n                      = n
 
 repair' :: Number -> Number
 repair' n@(Number s ds) = produce s (replacements n) ds
