@@ -1,10 +1,14 @@
 {-# OPTIONS_GHC -Wall #-}
 module Digit (Digit, alternatives, fromTuple, toChar) where
 
-import Data.Maybe (catMaybes)
+import Control.Monad ((>=>))
+import Data.Either (isRight)
 import Data.Tuple (swap)
 
-type Digit = Either (Maybe OCR) Char
+type Digit = Either ReadError Char
+
+data ReadError = WrongFormat | Unrecognized OCR deriving Show
+
 data OCR = OCR [Bool] deriving Eq
 
 instance Show OCR where
@@ -17,24 +21,21 @@ toChar :: Digit -> Char
 toChar = either (const '?') id
 
 fromTuple :: (String, String, String) -> Digit
-fromTuple = zipZap tryOCR lookupOCR
+fromTuple = tryOCR >=> lookupOCR
 
-lookupOCR :: OCR -> Maybe Char
-lookupOCR = (`lookup` table)
+tryOCR :: (String, String, String) -> Either ReadError OCR
+tryOCR ([_ , t, _ ]
+       ,[tl, m, tr]
+       ,[bl, b, br]) = Right . OCR $ (/= ' ') <$> [t, tl, m, tr, bl, b, br]
+tryOCR _             = Left WrongFormat
+
+lookupOCR :: OCR -> Digit
+lookupOCR ocr = case lookup ocr table of
+                  Just c -> Right c
+                  _      -> Left $ Unrecognized ocr
 
 lookupChar :: Char -> Maybe OCR
 lookupChar = (`lookup` map swap table)
-
--- No idea what to call this.
--- There must be a way to simplify it
--- using Functor-Applicative-Monad
--- instances for Maybe and Either.
-zipZap :: (a -> Maybe b) -> (b -> Maybe c) -> a -> Either (Maybe b) c
-zipZap f g x = case f x of
-                 Nothing -> Left Nothing
-                 Just y  -> case g y of
-                              Nothing -> Left $ Just y
-                              Just z  -> Right z
 
 table :: [(OCR, Char)]
 table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
@@ -49,18 +50,13 @@ table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
         ,(OCR [ True,  True,  True,  True, False,  True,  True], '9')
         ]
 
-tryOCR :: (String, String, String) -> Maybe OCR
-tryOCR ([_ , t, _ ]
-       ,[tl, m, tr]
-       ,[bl, b, br]) = Just . OCR $ (/= ' ') <$> [t, tl, m, tr, bl, b, br]
-tryOCR _             = Nothing
-
 alternatives :: Digit -> [Digit]
-alternatives (Left mo) = variants mo
-alternatives (Right c) = variants $ lookupChar c
+alternatives (Left (Unrecognized o)) = variants $ Just o
+alternatives (Right c)               = variants $ lookupChar c
+alternatives _                       = []
 
 variants :: Maybe OCR -> [Digit]
-variants (Just o) = (Right <$>) . catMaybes . (lookupOCR <$>) . oneAways $ o
+variants (Just o) = filter isRight . (lookupOCR <$>) . oneAways $ o
 variants _        = []
 
 oneAways :: OCR -> [OCR]
