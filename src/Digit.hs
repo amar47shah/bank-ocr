@@ -5,9 +5,9 @@ import Control.Monad ((>=>))
 import Data.Either (isRight)
 import Data.Tuple (swap)
 
-type Digit = Either ReadError Char
+type Digit = Either (ReadError OCR) Char
 
-data ReadError = WrongFormat | Unrecognized OCR deriving Show
+data ReadError a = Unrecognized a | WrongFormat deriving Show
 
 data OCR = OCR [Bool] deriving Eq
 
@@ -23,19 +23,22 @@ toChar = either (const '?') id
 fromTuple :: (String, String, String) -> Digit
 fromTuple = tryOCR >=> lookupOCR
 
-tryOCR :: (String, String, String) -> Either ReadError OCR
+tryOCR :: (String, String, String) -> Either (ReadError a) OCR
 tryOCR ([_ , t, _ ]
        ,[tl, m, tr]
        ,[bl, b, br]) = Right . OCR $ (/= ' ') <$> [t, tl, m, tr, bl, b, br]
 tryOCR _             = Left WrongFormat
 
 lookupOCR :: OCR -> Digit
-lookupOCR ocr = case lookup ocr table of
-                  Just c -> Right c
-                  _      -> Left $ Unrecognized ocr
+lookupOCR = (`lookup'` table)
 
-lookupChar :: Char -> Maybe OCR
-lookupChar = (`lookup` map swap table)
+lookupChar :: Char -> Either (ReadError Char) OCR
+lookupChar = (`lookup'` map swap table)
+
+lookup' :: Eq a => a -> [(a, b)] -> Either (ReadError a) b
+lookup' x ts = case lookup x ts of
+                 Just y -> Right y
+                 _      -> Left $ Unrecognized x
 
 table :: [(OCR, Char)]
 table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
@@ -51,13 +54,13 @@ table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
         ]
 
 alternatives :: Digit -> [Digit]
-alternatives (Left (Unrecognized o)) = variants $ Just o
 alternatives (Right c)               = variants $ lookupChar c
+alternatives (Left (Unrecognized o)) = variants $ Right o
 alternatives _                       = []
 
-variants :: Maybe OCR -> [Digit]
-variants (Just o) = filter isRight . (lookupOCR <$>) . oneAways $ o
-variants _        = []
+variants :: Either a OCR -> [Digit]
+variants (Right o) = filter isRight . (lookupOCR <$>) . oneAways $ o
+variants _         = []
 
 oneAways :: OCR -> [OCR]
 oneAways (OCR bits) = let oneAway (a, b:c) = OCR $ a ++ (not b) : c
