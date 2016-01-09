@@ -28,8 +28,8 @@ data Status = Unparsable
             deriving Show
 
 tag :: Status -> String
-tag  Illegible     = " ILL"
-tag  Incorrect     = " ERR"
+tag Illegible      = " ILL"
+tag Incorrect      = " ERR"
 tag (Ambiguous ns) = " AMB " ++ show ns
 tag _              = ""
 
@@ -81,7 +81,8 @@ repair n                      = n
 
 repair' :: Number -> Number
 repair' n@(Number s ds) = produce s (replacements n) ds
-  where produce s' []  = Number s'
+  where produce :: Status -> [Number] -> [Digit] -> Number
+        produce s' []  = Number s'
         produce _  [r] = Number $ Replaced r
         produce _  rs  = Number $ Ambiguous rs
 
@@ -94,5 +95,6 @@ correct _                  = False
 
 alts :: [Digit] -> [[Digit]]
 alts = foldr ((++) . oneAways) [] . zipWith splitAt [0..8] . replicate 9
-  where oneAways (a, b:c) = [a ++ b':c | b' <- alternatives b]
+  where oneAways :: ([Digit], [Digit]) -> [[Digit]]
+        oneAways (a, b:c) = [a ++ b':c | b' <- alternatives b]
         oneAways _        = []

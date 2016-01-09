@@ -14,6 +14,7 @@ data OCR = OCR [Bool] deriving Eq
 instance Show OCR where
   show (OCR bits) = '\n' : unlines [[' ', t, ' '], [tl, m, tr], [bl, b, br]]
     where [t, tl, m, tr, bl, b, br] = zipWith decode "_|_||_|" bits
+          decode :: Char -> Bool -> Char
           decode c True  = c
           decode _ False = ' '
 
@@ -63,6 +64,7 @@ variants (Right o) = filter isRight . (lookupOCR <$>) . oneAways $ o
 variants _         = []
 
 oneAways :: OCR -> [OCR]
-oneAways (OCR bits) = let oneAway (a, b:c) = OCR $ a ++ (not b) : c
+oneAways (OCR bits) = let oneAway :: ([Bool], [Bool]) -> OCR
+                          oneAway (a, b:c) = OCR $ a ++ (not b) : c
                           oneAway (a, _)   = OCR a
                        in oneAway <$> zipWith splitAt [0..6] (replicate 7 bits)
