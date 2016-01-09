@@ -4,6 +4,7 @@ module Parser (assemble, parse) where
 import Digit (Digit, alternatives, toChar, fromTuple)
 import Split (splitEvery)
 
+import Control.Arrow ((&&&))
 import Data.Char (digitToInt)
 import Data.Either (lefts, rights)
 
@@ -80,11 +81,12 @@ repair n@(Number Incorrect _) = repair' n
 repair n                      = n
 
 repair' :: Number -> Number
-repair' n@(Number s ds) = produce s (replacements n) ds
-  where produce :: Status -> [Number] -> [Digit] -> Number
-        produce s' []  = Number s'
-        produce _  [r] = Number $ Replaced r
-        produce _  rs  = Number $ Ambiguous rs
+repair' = uncurry resolve . (replacements &&& id)
+
+resolve :: [Number] -> Number -> Number
+resolve []  n = n
+resolve [r] n = n { status = Replaced r }
+resolve rs  n = n { status = Ambiguous rs }
 
 replacements :: Number -> [Number]
 replacements = filter correct . (verify . new <$>) . alts . digits
