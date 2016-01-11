@@ -19,9 +19,12 @@ data ReadError a = Unrecognized a | WrongFormat deriving Show
 
 data OCR = OCR [Bool] deriving Eq
 
+bits :: OCR -> [Bool]
+bits (OCR bs) = bs
+
 instance Show OCR where
-  show (OCR bits) = '\n' : unlines [[' ', t, ' '], [tl, m, tr], [bl, b, br]]
-    where [t, tl, m, tr, bl, b, br] = zipWith decode "_|_||_|" bits
+  show o = '\n' : unlines [[' ', t, ' '], [tl, m, tr], [bl, b, br]]
+    where [t, tl, m, tr, bl, b, br] = zipWith decode "_|_||_|" $ bits o
           decode :: Char -> Bool -> Char
           decode c True  = c
           decode _ False = ' '
@@ -71,7 +74,7 @@ variants :: Either a OCR -> [Digit]
 variants = either (const []) $ filter isRight . (lookupOCR <$>) . oneAways
 
 oneAways :: OCR -> [OCR]
-oneAways (OCR bits) = oneAway <$> splits bits
+oneAways = (oneAway <$>) . splits . bits
   where oneAway :: ([Bool], [Bool]) -> OCR
         oneAway (a, b:c) = OCR $ a ++ (not b) : c
         oneAway (a, _)   = OCR a
