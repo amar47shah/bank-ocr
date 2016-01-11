@@ -7,11 +7,15 @@ import Split (splitEvery, splits)
 import Control.Arrow ((&&&))
 import Data.Char (digitToInt)
 
+-- Exported definitions:
+
 assemble :: [Number] -> String
 assemble = unlines . map show
 
 parse :: String -> [Number]
 parse = map process . chunks
+
+-- Private definitions:
 
 type Chunk = [String]
 

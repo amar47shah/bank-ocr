@@ -7,13 +7,28 @@ import Control.Monad ((>=>))
 import Data.Either (isRight, lefts, rights)
 import Data.Tuple (swap)
 
+-- Exported definitions:
+
 type Digit = Either (ReadError OCR) Char
+
+toChar :: Digit -> Char
+toChar = either (const '?') id
+
+fromTuple :: (String, String, String) -> Digit
+fromTuple = tryOCR >=> lookupOCR
 
 chars :: [Digit] -> [Char]
 chars = rights
 
 errors :: [Digit] -> [ReadError OCR]
 errors = lefts
+
+alternatives :: Digit -> [Digit]
+alternatives (Right c)               = variants $ lookupChar c
+alternatives (Left (Unrecognized o)) = variants $ Right o
+alternatives _                       = []
+
+-- Private definitions:
 
 data ReadError a = Unrecognized a | WrongFormat deriving Show
 
@@ -28,12 +43,6 @@ instance Show OCR where
           decode :: Char -> Bool -> Char
           decode c True  = c
           decode _ False = ' '
-
-toChar :: Digit -> Char
-toChar = either (const '?') id
-
-fromTuple :: (String, String, String) -> Digit
-fromTuple = tryOCR >=> lookupOCR
 
 tryOCR :: (String, String, String) -> Either (ReadError a) OCR
 tryOCR ([_ , t, _ ]
@@ -64,11 +73,6 @@ table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
         ,(OCR [ True,  True,  True,  True,  True,  True,  True], '8')
         ,(OCR [ True,  True,  True,  True, False,  True,  True], '9')
         ]
-
-alternatives :: Digit -> [Digit]
-alternatives (Right c)               = variants $ lookupChar c
-alternatives (Left (Unrecognized o)) = variants $ Right o
-alternatives _                       = []
 
 variants :: Either a OCR -> [Digit]
 variants = either (const []) $ filter isRight . (lookupOCR <$>) . oneAways
