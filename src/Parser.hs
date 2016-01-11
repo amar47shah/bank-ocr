@@ -1,12 +1,11 @@
 {-# OPTIONS_GHC -Wall #-}
 module Parser (assemble, parse) where
 
-import Digit (Digit, alternatives, toChar, fromTuple)
+import Digit (Digit, toChar, fromTuple, chars, errors, alternatives)
 import Split (splitEvery, splits)
 
 import Control.Arrow ((&&&))
 import Data.Char (digitToInt)
-import Data.Either (lefts, rights)
 
 assemble :: [Number] -> String
 assemble = unlines . map show
@@ -63,7 +62,7 @@ verify n@(Number Unverified _)
 verify n = n
 
 legible :: Number -> Bool
-legible = null . lefts . digits
+legible = null . errors . digits
 
 check :: Number -> Bool
 check = (== 0)
@@ -72,7 +71,7 @@ check = (== 0)
       . sum
       . zipWith (*) [9,8..1]
       . (digitToInt <$>)
-      . rights
+      . chars
       . digits
 
 repair :: Number -> Number

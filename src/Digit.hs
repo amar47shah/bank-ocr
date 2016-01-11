@@ -1,13 +1,19 @@
 {-# OPTIONS_GHC -Wall #-}
-module Digit (Digit, alternatives, fromTuple, toChar) where
+module Digit (Digit, toChar, fromTuple, chars, errors, alternatives) where
 
 import Split (splits)
 
 import Control.Monad ((>=>))
-import Data.Either (isRight)
+import Data.Either (isRight, lefts, rights)
 import Data.Tuple (swap)
 
 type Digit = Either (ReadError OCR) Char
+
+chars :: [Digit] -> [Char]
+chars = rights
+
+errors :: [Digit] -> [ReadError OCR]
+errors = lefts
 
 data ReadError a = Unrecognized a | WrongFormat deriving Show
 
@@ -62,8 +68,7 @@ alternatives (Left (Unrecognized o)) = variants $ Right o
 alternatives _                       = []
 
 variants :: Either a OCR -> [Digit]
-variants (Right o) = filter isRight . (lookupOCR <$>) . oneAways $ o
-variants _         = []
+variants = either (const []) $ filter isRight . (lookupOCR <$>) . oneAways
 
 oneAways :: OCR -> [OCR]
 oneAways (OCR bits) = oneAway <$> splits bits
