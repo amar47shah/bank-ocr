@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -Wall #-}
 module Digit (Digit, alternatives, fromTuple, toChar) where
 
+import Split (splits)
+
 import Control.Monad ((>=>))
 import Data.Either (isRight)
 import Data.Tuple (swap)
@@ -64,7 +66,7 @@ variants (Right o) = filter isRight . (lookupOCR <$>) . oneAways $ o
 variants _         = []
 
 oneAways :: OCR -> [OCR]
-oneAways (OCR bits) = let oneAway :: ([Bool], [Bool]) -> OCR
-                          oneAway (a, b:c) = OCR $ a ++ (not b) : c
-                          oneAway (a, _)   = OCR a
-                       in oneAway <$> zipWith splitAt [0..6] (replicate 7 bits)
+oneAways (OCR bits) = oneAway <$> splits bits
+  where oneAway :: ([Bool], [Bool]) -> OCR
+        oneAway (a, b:c) = OCR $ a ++ (not b) : c
+        oneAway (a, _)   = OCR a

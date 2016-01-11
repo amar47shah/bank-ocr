@@ -2,7 +2,7 @@
 module Parser (assemble, parse) where
 
 import Digit (Digit, alternatives, toChar, fromTuple)
-import Split (splitEvery)
+import Split (splitEvery, splits)
 
 import Control.Arrow ((&&&))
 import Data.Char (digitToInt)
@@ -96,7 +96,7 @@ correct (Number Correct _) = True
 correct _                  = False
 
 alts :: [Digit] -> [[Digit]]
-alts = foldr ((++) . oneAways) [] . zipWith splitAt [0..8] . replicate 9
+alts = foldr ((++) . oneAways) [] . splits
   where oneAways :: ([Digit], [Digit]) -> [[Digit]]
         oneAways (a, b:c) = [a ++ b':c | b' <- alternatives b]
         oneAways _        = []
