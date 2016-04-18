@@ -80,5 +80,5 @@ variants = either (const []) $ filter isRight . (lookupOCR <$>) . oneAways
 oneAways :: OCR -> [OCR]
 oneAways = (oneAway <$>) . splits . bits
   where oneAway :: ([Bool], [Bool]) -> OCR
-        oneAway (a, b:c) = OCR $ a ++ (not b) : c
+        oneAway (a, b:c) = OCR $ a ++ not b : c
         oneAway (a, _)   = OCR a

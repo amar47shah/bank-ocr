@@ -42,7 +42,7 @@ data Number = Number { status :: Status
 
 instance Show Number where
   show (Number (Replaced n) _) = show n
-  show n                       = (display $ digits n) ++ (tag $ status n)
+  show n                       = display (digits n) ++ tag (status n)
 
 display :: [Digit] -> String
 display = map toChar
@@ -51,7 +51,7 @@ process :: Chunk -> Number
 process = repair . verify . parseNumber
 
 parseNumber :: Chunk -> Number
-parseNumber (a:b:c:_:[]) = let [xs, ys, zs] = splitEvery 3 <$> [a, b, c]
+parseNumber [a, b, c, _] = let [xs, ys, zs] = splitEvery 3 <$> [a, b, c]
                             in new $ fromTuple <$> zip3 xs ys zs
 parseNumber _            = Number Unparsable []
 
