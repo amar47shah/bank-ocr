@@ -1,8 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
-module Digit (Digit, toChar, fromTuple, chars, errors) where
+module Digit (Digit, toChar, fromTuple) where
 
 import Control.Monad ((>=>))
-import Data.Either (lefts, rights)
 
 -- Exported definitions:
 
@@ -13,12 +12,6 @@ toChar = either (const '?') id
 
 fromTuple :: (String, String, String) -> Digit
 fromTuple = tryOCR >=> lookupOCR
-
-chars :: [Digit] -> [Char]
-chars = rights
-
-errors :: [Digit] -> [ReadError OCR]
-errors = lefts
 
 -- Private definitions:
 
