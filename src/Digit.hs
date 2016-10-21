@@ -1,11 +1,8 @@
 {-# OPTIONS_GHC -Wall #-}
-module Digit (Digit, toChar, fromTuple, chars, errors, alternatives) where
-
-import Split (splits)
+module Digit (Digit, toChar, fromTuple, chars, errors) where
 
 import Control.Monad ((>=>))
-import Data.Either (isRight, lefts, rights)
-import Data.Tuple (swap)
+import Data.Either (lefts, rights)
 
 -- Exported definitions:
 
@@ -22,11 +19,6 @@ chars = rights
 
 errors :: [Digit] -> [ReadError OCR]
 errors = lefts
-
-alternatives :: Digit -> [Digit]
-alternatives (Right c)               = variants $ lookupChar c
-alternatives (Left (Unrecognized o)) = variants $ Right o
-alternatives _                       = []
 
 -- Private definitions:
 
@@ -53,9 +45,6 @@ tryOCR _             = Left WrongFormat
 lookupOCR :: OCR -> Digit
 lookupOCR = (`lookup'` table)
 
-lookupChar :: Char -> Either (ReadError Char) OCR
-lookupChar = (`lookup'` map swap table)
-
 lookup' :: Eq a => a -> [(a, b)] -> Either (ReadError a) b
 lookup' x ts = case lookup x ts of
                  Just y -> Right y
@@ -73,12 +62,3 @@ table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
         ,(OCR [ True,  True,  True,  True,  True,  True,  True], '8')
         ,(OCR [ True,  True,  True,  True, False,  True,  True], '9')
         ]
-
-variants :: Either a OCR -> [Digit]
-variants = either (const []) $ filter isRight . (lookupOCR <$>) . oneAways
-
-oneAways :: OCR -> [OCR]
-oneAways = (oneAway <$>) . splits . bits
-  where oneAway :: ([Bool], [Bool]) -> OCR
-        oneAway (a, b:c) = OCR $ a ++ not b : c
-        oneAway (a, _)   = OCR a
