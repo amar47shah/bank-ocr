@@ -7,4 +7,4 @@ splitEvery n xs = first : splitEvery n rest
   where (first, rest) = splitAt n xs
 
 splits :: [a] -> [([a], [a])]
-splits = take . length <*> zipWith splitAt [0..] . repeat
+splits = take . succ . length <*> zipWith splitAt [0..] . repeat

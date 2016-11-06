@@ -5,6 +5,7 @@ import Split (splits)
 
 import Control.Monad ((>=>))
 import Data.Either (isRight, lefts, rights)
+import Data.Maybe (catMaybes)
 import Data.Tuple (swap)
 
 -- Exported definitions:
@@ -78,7 +79,7 @@ variants :: Either a OCR -> [Digit]
 variants = either (const []) $ filter isRight . (lookupOCR <$>) . oneAways
 
 oneAways :: OCR -> [OCR]
-oneAways = (oneAway <$>) . splits . bits
-  where oneAway :: ([Bool], [Bool]) -> OCR
-        oneAway (a, b:c) = OCR $ a ++ not b : c
-        oneAway (a, _)   = OCR a
+oneAways = map OCR . catMaybes . map oneBitAway . splits . bits
+  where oneBitAway :: ([Bool], [Bool]) -> Maybe [Bool]
+        oneBitAway (a, b:c) = Just $ a ++ not b : c
+        oneBitAway _        = Nothing
