@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 module Digit (Digit, toChar, fromTuple, chars, errors, alternatives) where
 
-import Split (splits)
+import Split (atSplits)
 
 import Control.Monad ((>=>))
 import Data.Either (isRight, lefts, rights)
@@ -79,7 +79,4 @@ variants :: Either a OCR -> [Digit]
 variants = either (const []) $ filter isRight . map lookupOCR . oneBitAways
 
 oneBitAways :: OCR -> [OCR]
-oneBitAways = map OCR . catMaybes . map flipAtSplit . splits . bits
-  where flipAtSplit :: ([Bool], [Bool]) -> Maybe [Bool]
-        flipAtSplit (a, b:c) = Just $ a ++ not b : c
-        flipAtSplit _        = Nothing
+oneBitAways = map OCR . catMaybes . atSplits (Just . not) . bits

@@ -2,7 +2,7 @@
 module Parser (assemble, parse) where
 
 import Digit (Digit, toChar, fromTuple, chars, errors, alternatives)
-import Split (splitEvery, splits)
+import Split (atSplits, splitEvery)
 
 import Control.Arrow ((&&&))
 import Data.Char (digitToInt)
@@ -92,14 +92,11 @@ resolve [r] n = n { status = Replaced r }
 resolve rs  n = n { status = Ambiguous rs }
 
 replacements :: Number -> [Number]
-replacements = filter correct . map verify . map new . oneDigitAways . digits
+replacements = filter correct . map verify . oneDigitAways
 
 correct :: Number -> Bool
 correct (Number Correct _) = True
 correct _                  = False
 
-oneDigitAways :: [Digit] -> [[Digit]]
-oneDigitAways = concatMap altsAtSplit . splits
-  where altsAtSplit :: ([Digit], [Digit]) -> [[Digit]]
-        altsAtSplit (a, b:c) = [a ++ b':c | b' <- alternatives b]
-        altsAtSplit _        = []
+oneDigitAways :: Number -> [Number]
+oneDigitAways = map new . concat . atSplits alternatives . digits

@@ -1,5 +1,12 @@
 {-# OPTIONS_GHC -Wall #-}
-module Split (splitEvery, splits) where
+module Split (atSplits, splitEvery) where
+
+atSplit :: (Functor f, Monoid (f [a])) => (a -> f a) -> ([a], [a]) -> f [a]
+atSplit f (a, x:b) = (a ++) . (:b) <$> f x
+atSplit _  _       = mempty
+
+atSplits :: (Functor f, Monoid (f [a])) => (a -> f a) -> [a] -> [f [a]]
+atSplits f = map (atSplit f) . splits
 
 splitEvery :: Int -> [a] -> [[a]]
 splitEvery _ [] = []
