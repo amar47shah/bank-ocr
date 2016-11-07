@@ -76,10 +76,10 @@ table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
         ]
 
 variants :: Either a OCR -> [Digit]
-variants = either (const []) $ filter isRight . (lookupOCR <$>) . oneAways
+variants = either (const []) $ filter isRight . map lookupOCR . oneBitAways
 
-oneAways :: OCR -> [OCR]
-oneAways = map OCR . catMaybes . map oneBitAway . splits . bits
-  where oneBitAway :: ([Bool], [Bool]) -> Maybe [Bool]
-        oneBitAway (a, b:c) = Just $ a ++ not b : c
-        oneBitAway _        = Nothing
+oneBitAways :: OCR -> [OCR]
+oneBitAways = map OCR . catMaybes . map flipAtSplit . splits . bits
+  where flipAtSplit :: ([Bool], [Bool]) -> Maybe [Bool]
+        flipAtSplit (a, b:c) = Just $ a ++ not b : c
+        flipAtSplit _        = Nothing

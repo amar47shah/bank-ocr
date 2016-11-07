@@ -92,14 +92,14 @@ resolve [r] n = n { status = Replaced r }
 resolve rs  n = n { status = Ambiguous rs }
 
 replacements :: Number -> [Number]
-replacements = filter correct . (verify . new <$>) . alts . digits
+replacements = filter correct . map verify . map new . oneDigitAways . digits
 
 correct :: Number -> Bool
 correct (Number Correct _) = True
 correct _                  = False
 
-alts :: [Digit] -> [[Digit]]
-alts = foldr ((++) . oneAways) [] . splits
-  where oneAways :: ([Digit], [Digit]) -> [[Digit]]
-        oneAways (a, b:c) = [a ++ b':c | b' <- alternatives b]
-        oneAways _        = []
+oneDigitAways :: [Digit] -> [[Digit]]
+oneDigitAways = concatMap altsAtSplit . splits
+  where altsAtSplit :: ([Digit], [Digit]) -> [[Digit]]
+        altsAtSplit (a, b:c) = [a ++ b':c | b' <- alternatives b]
+        altsAtSplit _        = []
