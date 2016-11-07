@@ -3,7 +3,6 @@ module Parser (assemble, parse) where
 import Digit (Digit, toChar, fromTuple, chars, errors, alternatives)
 import Split (atSplits, splitEvery)
 
-import Control.Arrow ((&&&))
 import Data.Char (digitToInt)
 
 -- Exported definitions:
@@ -83,12 +82,12 @@ repair n@(Number Incorrect _) = repair' n
 repair n                      = n
 
 repair' :: Number -> Number
-repair' = uncurry resolve . (replacements &&& id)
+repair' = resolve <*> replacements
 
-resolve :: [Number] -> Number -> Number
-resolve []  n = n
-resolve [r] n = n { status = Replaced r }
-resolve rs  n = n { status = Ambiguous rs }
+resolve :: Number -> [Number] -> Number
+resolve n []  = n
+resolve n [r] = n { status = Replaced r }
+resolve n rs  = n { status = Ambiguous rs }
 
 replacements :: Number -> [Number]
 replacements = filter correct . map verify . oneDigitAways
