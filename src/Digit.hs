@@ -62,16 +62,16 @@ lookup' x ts = case lookup x ts of
                  _      -> Left $ Unrecognized x
 
 table :: [(OCR, Char)]
-table = [(OCR [ True,  True, False,  True,  True,  True,  True], '0')
-        ,(OCR [False, False, False,  True, False, False,  True], '1')
-        ,(OCR [ True, False,  True,  True,  True,  True, False], '2')
-        ,(OCR [ True, False,  True,  True, False,  True,  True], '3')
-        ,(OCR [False,  True,  True,  True, False, False,  True], '4')
-        ,(OCR [ True,  True,  True, False, False,  True,  True], '5')
-        ,(OCR [ True,  True,  True, False,  True,  True,  True], '6')
-        ,(OCR [ True, False, False,  True, False, False,  True], '7')
-        ,(OCR [ True,  True,  True,  True,  True,  True,  True], '8')
-        ,(OCR [ True,  True,  True,  True, False,  True,  True], '9')
+table = [ (OCR [ True,  True, False,  True,  True,  True,  True], '0')
+        , (OCR [False, False, False,  True, False, False,  True], '1')
+        , (OCR [ True, False,  True,  True,  True,  True, False], '2')
+        , (OCR [ True, False,  True,  True, False,  True,  True], '3')
+        , (OCR [False,  True,  True,  True, False, False,  True], '4')
+        , (OCR [ True,  True,  True, False, False,  True,  True], '5')
+        , (OCR [ True,  True,  True, False,  True,  True,  True], '6')
+        , (OCR [ True, False, False,  True, False, False,  True], '7')
+        , (OCR [ True,  True,  True,  True,  True,  True,  True], '8')
+        , (OCR [ True,  True,  True,  True, False,  True,  True], '9')
         ]
 
 variants :: Either a OCR -> [Digit]

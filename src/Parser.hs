@@ -50,9 +50,9 @@ process :: Chunk -> Number
 process = repair . verify . parseNumber
 
 parseNumber :: Chunk -> Number
-parseNumber [a, b, c, _] = let [xs, ys, zs] = splitEvery 3 <$> [a, b, c]
-                            in new $ fromTuple <$> zip3 xs ys zs
-parseNumber _            = Number Unparsable []
+parseNumber (a:b:c:_) = new . map fromTuple $ zip3 xs ys zs
+                  where [xs, ys, zs] = splitEvery 3 <$> [a, b, c]
+parseNumber _         = Number Unparsable []
 
 new :: [Digit] -> Number
 new = Number Unverified
@@ -73,7 +73,7 @@ check = (== 0)
       . toInteger
       . sum
       . zipWith (*) [9,8..1]
-      . (digitToInt <$>)
+      . map digitToInt
       . chars
       . digits
 
