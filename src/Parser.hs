@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 module Parser (assemble, parse) where
 
 import Digit (Digit, toChar, fromTuple, chars, errors, alternatives)

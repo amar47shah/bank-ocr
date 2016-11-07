@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 module Split (atSplits, splitEvery) where
 
 atSplit :: (Functor f, Monoid (f [a])) => (a -> f a) -> ([a], [a]) -> f [a]

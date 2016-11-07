@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 module Digit (Digit, toChar, fromTuple, chars, errors, alternatives) where
 
 import Split (atSplits)
